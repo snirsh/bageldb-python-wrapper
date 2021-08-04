@@ -12,7 +12,7 @@ HEADERS_FORMAT = {"Authorization": "Bearer {}", "Accept-Version": "v1"}
 
 
 class BagelDBWrapper:
-    def __init__(self, api_token: str, enable_tqdm: bool=False):
+    def __init__(self, api_token: str, enable_tqdm: bool = False):
         """
         Initializer for the BagelDB python wrapper.
         :param api_token: for the Authorization: Added as authorization headers Authorization: Bearer <<API_TOKEN>>
@@ -70,7 +70,7 @@ class BagelDBWrapper:
             items = json.loads(response.content)
             item_count = int(response.headers.get('item-count'))
             number_of_pages = ceil(item_count / per_page)
-            for page in tqdm(range(2, number_of_pages + 1), desc="Getting bagel pages", disable=self.enable_tqdm):
+            for page in tqdm(range(2, number_of_pages + 1), desc="Getting bagel pages", disable=not self.enable_tqdm):
                 pathToFetchFrom = pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}')
                 page_response = requests.get(pathToFetchFrom, headers=self.headers)
                 if page_response.status_code == 200:
