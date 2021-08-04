@@ -1,5 +1,6 @@
 # bageldb-python-wrapper
-A Python Wrapper for BagelDB
+A Python Wrapper for BagelDB.
+Please refer first to the official docs on [BagelDB docs](https://docs.bageldb.com).
 
 ## Installation and updating
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install wrapper as suggested below. 
