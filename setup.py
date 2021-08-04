@@ -16,6 +16,6 @@ setuptools.setup(
         "Bug Tracker": "https://github.com/snirsh/bageldb-python-wrapper/issues"
     },
     license='MIT',
-    packages=['bageldb-python-wrapper'],
+    packages=['BagelDBWrapper'],
     install_requires=['requests', 'tqdm'],
 )
