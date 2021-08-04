@@ -12,7 +12,7 @@ HEADERS_FORMAT = {"Authorization": "Bearer {}", "Accept-Version": "v1"}
 
 
 class BagelDBWrapper:
-    def __init__(self, api_token, enable_tqdm=False):
+    def __init__(self, api_token: str, enable_tqdm: bool=False):
         """
         Initializer for the BagelDB python wrapper.
         :param api_token: for the Authorization: Added as authorization headers Authorization: Bearer <<API_TOKEN>>
@@ -152,7 +152,7 @@ class BagelDBWrapper:
             .replace('/items', f'/items/{item_id}?nestedID={nested_collection_name}.{nested_item_id}')
         return requests.put(pathToPutTo, json.dumps(dict_to_put), headers=self.headers)
 
-    def add_image_to_item(self, collection_name, item_id, image_slug, image_url):
+    def add_image_to_item(self, collection_name: str, item_id: str, image_slug: str, image_url: str):
         """
         adds an image to an existing item
 
@@ -169,7 +169,7 @@ class BagelDBWrapper:
         files = {'imageLink': image_url}
         return requests.put(pathToPost, data=files, headers=self.headers)
 
-    def get_single_item(self, collection_name, item_id):
+    def get_single_item(self, collection_name: str, item_id: str):
         """
         Retrieve a single item
 
@@ -182,7 +182,7 @@ class BagelDBWrapper:
             .replace('/items', '/items/' + item_id)
         return requests.get(pathForItem, headers=self.headers)
 
-    def delete_nested_item(self, collection_name, item_id, nested_collection_name, nested_item_id):
+    def delete_nested_item(self, collection_name: str, item_id: str, nested_collection_name: str, nested_item_id: str):
         """
         deletes a nested item
         :param collection_name: 'articles'
