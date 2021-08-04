@@ -23,6 +23,21 @@ Features:
 *  delete_nested_item --> delete an existing nested item
 *  add_image_to_item --> add image to item
 
+#### Demo of some of the features:
+```python
+from BagelDBWrapper import BagelDBWrapper
+
+# Don't forget your token!
+wrapper = BagelDBWrapper(api_token="<<API_TOKEN>>", enable_tqdm=True)  # enabling progress logging
+
+items = wrapper.get_collection(collection_name='articles', per_page=400, project_on="name,title", queries=[("name","!=","some")])
+item_to_add = {"name": "new article"}
+# remember that function return requests response
+response = wrapper.create_item('articles', item_to_add)
+id_of_created_item = response.json().get('id')
+wrapper.delete_item(id_of_created_item)
+```
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
