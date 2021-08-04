@@ -33,7 +33,7 @@ wrapper = BagelDBWrapper(api_token="<<API_TOKEN>>", enable_tqdm=True)  # enablin
 
 items = wrapper.get_collection(collection_name='articles', per_page=400, project_on="name,title", queries=[("name","!=","some")])
 item_to_add = {"name": "new article"}
-# remember that function return requests response
+# remember that functions return a python-requests response
 response = wrapper.create_item('articles', item_to_add)
 id_of_created_item = response.json().get('id')
 wrapper.delete_item(id_of_created_item)
