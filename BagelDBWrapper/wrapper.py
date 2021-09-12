@@ -1,4 +1,5 @@
 import requests
+import grequests
 import json
 import datetime
 from math import ceil
@@ -70,9 +71,12 @@ class BagelDBWrapper:
             items = json.loads(response.content)
             item_count = int(response.headers.get('item-count'))
             number_of_pages = ceil(item_count / per_page)
-            for page in tqdm(range(2, number_of_pages + 1), desc="Getting bagel pages", disable=not self.enable_tqdm):
-                pathToFetchFrom = pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}')
-                page_response = requests.get(pathToFetchFrom, headers=self.headers)
+            responses = (grequests.get(
+                pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}'),
+                headers=self.headers)
+                for page in range(2, number_of_pages + 1))
+            rs = grequests.map(responses)
+            for page_response in rs:
                 if page_response.status_code == 200:
                     items += json.loads(page_response.content)
                 else:
