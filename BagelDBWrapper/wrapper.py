@@ -24,7 +24,7 @@ class BagelDBWrapper:
         self.headers = HEADERS_FORMAT
         self.headers['Authorization'] = self.headers['Authorization'].replace('{}', api_token)
 
-    def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
+    async def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
                        project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
         """
         Retrieve multiple items from a collection
