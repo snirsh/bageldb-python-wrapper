@@ -17,5 +17,5 @@ setuptools.setup(
     },
     license='MIT',
     packages=['BagelDBWrapper'],
-    install_requires=['requests', 'tqdm', 'grequests'],
+    install_requires=['requests', 'tqdm', 'aiohttp'],
 )

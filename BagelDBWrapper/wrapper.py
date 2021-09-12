@@ -1,5 +1,4 @@
 import requests
-import grequests
 import json
 import datetime
 from math import ceil
@@ -24,7 +23,7 @@ class BagelDBWrapper:
         self.headers = HEADERS_FORMAT
         self.headers['Authorization'] = self.headers['Authorization'].replace('{}', api_token)
 
-    async def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
+    def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
                        project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
         """
         Retrieve multiple items from a collection
@@ -71,12 +70,9 @@ class BagelDBWrapper:
             items = json.loads(response.content)
             item_count = int(response.headers.get('item-count'))
             number_of_pages = ceil(item_count / per_page)
-            responses = (grequests.get(
-                pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}'),
-                headers=self.headers)
-                for page in range(2, number_of_pages + 1))
-            rs = grequests.map(responses)
-            for page_response in rs:
+            for page in tqdm(range(2, number_of_pages + 1), desc="Getting bagel pages", disable=not self.enable_tqdm):
+                pathToFetchFrom = pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}')
+                page_response = requests.get(pathToFetchFrom, headers=self.headers)
                 if page_response.status_code == 200:
                     items += json.loads(page_response.content)
                 else:
