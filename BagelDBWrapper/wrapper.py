@@ -60,7 +60,7 @@ class BagelDBWrapper:
 
     async def _fetch_page_async(self, session, page_url):
         async with session.get(page_url, headers=self.headers) as page_response:
-            items = await json.loads(page_response.content)
+            items = await page_response.json()
             return items
 
     def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
