@@ -1,3 +1,6 @@
+import asyncio
+
+import aiohttp
 import requests
 import json
 import datetime
@@ -22,6 +25,43 @@ class BagelDBWrapper:
         self.path = MASTER_URL + GENERIC_PATH
         self.headers = HEADERS_FORMAT
         self.headers['Authorization'] = self.headers['Authorization'].replace('{}', api_token)
+
+    async def get_collection_async(self, collection_name: str, per_page: int = 100,
+                       project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
+        if extra_params is None:
+            extra_params = []
+        pathToFetchFrom = self.path.replace('{collection_name}', collection_name)
+        symbol = '?'
+        extra_arguments = ""
+        for arg in extra_params:
+            extra_arguments += f"{symbol}{arg}"
+            symbol = "&"
+        if project_on:
+            extra_arguments += f"{symbol}projectOn={','.join(project_on)}"
+            symbol = "&"
+        if queries:
+            for query in queries:
+                if len(query) == 3:
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{query[2]}"
+                else:
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}"
+                symbol = "&"
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+            pathToFetchFrom += f"{extra_arguments}{symbol}pageNumber=1&perPage={per_page}"
+            response = requests.get(pathToFetchFrom, headers=self.headers)
+            item_count = int(response.headers.get('item-count'))
+            number_of_pages = ceil(item_count / per_page)
+            for page in tqdm(range(1, number_of_pages + 1), desc="Getting bagel pages", disable=not self.enable_tqdm):
+                pathToFetchFrom = pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}')
+                tasks.append(asyncio.ensure_future(self._fetch_page_async(session, pathToFetchFrom)))
+            items = await asyncio.gather(*tasks)
+        return items
+
+    async def _fetch_page_async(self, session, page_url):
+        async with session.get(page_url, headers=self.headers) as page_response:
+            items = json.loads(page_response.content)
+            return items
 
     def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
                        project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
