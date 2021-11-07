@@ -96,9 +96,9 @@ class BagelDBWrapper:
         if queries:
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{query[2].replace('&' ,'%26')}"
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{urlencode(query[2])}"
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1].replace('&' ,'%26')}"
+                    extra_arguments += f"{symbol}query={query[0]}:{urlencode(query[1])}"
                 symbol = "&"
         if not pagination:
             response = requests.get(pathToFetchFrom + extra_arguments, headers=self.headers)
