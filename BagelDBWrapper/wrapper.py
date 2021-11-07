@@ -41,9 +41,9 @@ class BagelDBWrapper:
         if queries:
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(query[2])}"
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(str(query[2]))}"
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(query[1])}"
+                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
                 symbol = "&"
         async with aiohttp.ClientSession() as session:
             tasks = []
@@ -96,9 +96,9 @@ class BagelDBWrapper:
         if queries:
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(query[2])}"
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(str(query[2]))}"
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(query[1])}"
+                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
                 symbol = "&"
         if not pagination:
             response = requests.get(pathToFetchFrom + extra_arguments, headers=self.headers)
