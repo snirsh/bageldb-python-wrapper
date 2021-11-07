@@ -92,12 +92,10 @@ class BagelDBWrapper:
             extra_arguments += f"{symbol}projectOn={','.join(project_on)}"
             symbol = "&"
         if queries:
-            for query in queries:
-                if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{urlencode(query[2])}"
-                else:
-                    extra_arguments += f"{symbol}query={query[0]}:{urlencode(query[1])}"
-                symbol = "&"
+            if len(queries) == 1:
+                extra_arguments = urlencode(queries)
+            else:
+                extra_arguments = '&'.join([urlencode(query) for query in queries])
         if not pagination:
             response = requests.get(pathToFetchFrom + extra_arguments, headers=self.headers)
             return json.loads(response.content)
