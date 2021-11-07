@@ -3,10 +3,9 @@ import asyncio
 import aiohttp
 import requests
 import json
-import datetime
 from math import ceil
-from re import sub
 from tqdm import tqdm
+from urllib.parse import urlencode
 
 # type structures
 MASTER_URL = 'https://api.bagelstudio.co/api/public'
