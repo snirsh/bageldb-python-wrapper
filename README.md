@@ -22,7 +22,8 @@ Features:
 *  write_to_nested_collection --> create item in a nested collection
 *  update_item_in_nested_collection --> update an existing item in a nested collection
 *  delete_nested_item --> delete an existing nested item
-*  add_image_to_item --> add image to item
+*  add_image_to_item --> add image from existing URL to item
+*  add_local_image_to_item --> adds a local image to item
 
 #### Demo of some of the features:
 ```python
