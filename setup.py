@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='bageldb-python-wrapper',
-    version='0.0.1',
+    version='1.1.1',
     author='Snir Sharristh',
     author_email='snir@madeinjlm.org',
     description='A Python wrapper for BagelDB',
