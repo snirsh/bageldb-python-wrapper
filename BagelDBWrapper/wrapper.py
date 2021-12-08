@@ -26,7 +26,7 @@ class BagelDBWrapper:
         self.headers['Authorization'] = self.headers['Authorization'].replace('{}', api_token)
 
     async def get_collection_async(self, collection_name: str, per_page: int = 100,
-                       project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
+                                   project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
         if extra_params is None:
             extra_params = []
         pathToFetchFrom = self.path.replace('{collection_name}', collection_name)
@@ -207,6 +207,25 @@ class BagelDBWrapper:
         pathToPost += f"/image?imageSlug={image_slug}"
         files = {'imageLink': image_url}
         return requests.put(pathToPost, data=files, headers=self.headers)
+
+    def add_local_image_to_item(self, collection_name: str, item_id: str, image_slug: str, image_path: str):
+        """
+        adds a local image to an existing item
+
+        :param collection_name: 'articles'
+        :param item_id: bageldb item_id
+        :param image_slug: 'logo'
+        :param image_path: a path for the image, i.e. /home/usr/username/Pictures/to_upload.jpg
+        :return: requests response
+        """
+        path_to_post = self.path \
+            .replace('{collection_name}', collection_name) \
+            .replace('/items', '/items/' + item_id)
+        path_to_post += f"/image?imageSlug={image_slug}"
+        image_file_descriptor = open(image_path, "rb")
+        image_file = image_file_descriptor.read()
+        files = {'imageFile': image_file}
+        return requests.put(path_to_post, files=files, headers=self.headers)
 
     def get_single_item(self, collection_name: str, item_id: str):
         """
