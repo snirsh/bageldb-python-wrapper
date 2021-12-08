@@ -5,7 +5,7 @@ import requests
 import json
 from math import ceil
 from tqdm import tqdm
-from urllib.parse import urlencode
+from urllib.parse import quote_plus
 
 # type structures
 MASTER_URL = 'https://api.bagelstudio.co/api/public'
@@ -41,9 +41,9 @@ class BagelDBWrapper:
         if queries:
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{query[2]}"
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(str(query[2]))}"
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}"
+                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
                 symbol = "&"
         async with aiohttp.ClientSession() as session:
             tasks = []
@@ -96,9 +96,9 @@ class BagelDBWrapper:
         if queries:
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{urlencode(query[2])}"
+                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(str(query[2]))}"
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{urlencode(query[1])}"
+                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
                 symbol = "&"
         if not pagination:
             response = requests.get(pathToFetchFrom + extra_arguments, headers=self.headers)

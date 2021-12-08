@@ -1,5 +1,6 @@
 # bageldb-python-wrapper
-A Python Wrapper for BagelDB
+A Python Wrapper for BagelDB.
+Please refer first to the official docs on [BagelDB docs](https://docs.bageldb.com).
 
 ## Installation and updating
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install wrapper as suggested below. 
@@ -21,7 +22,8 @@ Features:
 *  write_to_nested_collection --> create item in a nested collection
 *  update_item_in_nested_collection --> update an existing item in a nested collection
 *  delete_nested_item --> delete an existing nested item
-*  add_image_to_item --> add image to item
+*  add_image_to_item --> add image from existing URL to item
+*  add_local_image_to_item --> adds a local image to item
 
 #### Demo of some of the features:
 ```python
@@ -32,7 +34,7 @@ wrapper = BagelDBWrapper(api_token="<<API_TOKEN>>", enable_tqdm=True)  # enablin
 
 items = wrapper.get_collection(collection_name='articles', per_page=400, project_on="name,title", queries=[("name","!=","some")])
 item_to_add = {"name": "new article"}
-# remember that function return requests response
+# remember that functions return a python-requests response
 response = wrapper.create_item('articles', item_to_add)
 id_of_created_item = response.json().get('id')
 wrapper.delete_item(id_of_created_item)
