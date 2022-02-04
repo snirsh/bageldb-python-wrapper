@@ -1,11 +1,13 @@
-import asyncio
+from datetime import datetime
 
-import aiohttp
 import requests
 import json
 from math import ceil
+
+from requests import Session
 from tqdm import tqdm
 from urllib.parse import quote_plus
+from concurrent import futures
 
 # type structures
 MASTER_URL = 'https://api.bagelstudio.co/api/public'
@@ -25,8 +27,8 @@ class BagelDBWrapper:
         self.headers = HEADERS_FORMAT
         self.headers['Authorization'] = self.headers['Authorization'].replace('{}', api_token)
 
-    async def get_collection_async(self, collection_name: str, per_page: int = 100,
-                                   project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
+    def get_collection_parallel(self, collection_name: str, per_page: int = 100,
+                                project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
         if extra_params is None:
             extra_params = []
         pathToFetchFrom = self.path.replace('{collection_name}', collection_name)
@@ -45,22 +47,30 @@ class BagelDBWrapper:
                 else:
                     extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
                 symbol = "&"
-        async with aiohttp.ClientSession() as session:
-            tasks = []
-            pathToFetchFrom += f"{extra_arguments}{symbol}pageNumber=1&perPage={per_page}"
-            response = requests.get(pathToFetchFrom, headers=self.headers)
-            item_count = int(response.headers.get('item-count'))
-            number_of_pages = ceil(item_count / per_page)
-            for page in tqdm(range(1, number_of_pages + 1), desc="Getting bagel pages", disable=not self.enable_tqdm):
-                pathToFetchFrom = pathToFetchFrom.replace(f'pageNumber={page - 1}', f'pageNumber={page}')
-                tasks.append(asyncio.ensure_future(self._fetch_page_async(session, pathToFetchFrom)))
-            items = await asyncio.gather(*tasks)
-        return items
 
-    async def _fetch_page_async(self, session, page_url):
-        async with session.get(page_url, headers=self.headers) as page_response:
-            items = await page_response.json()
-            return items
+        pathToFetchFrom += f"{extra_arguments}{symbol}perPage={per_page}"
+        response = requests.get(f"{pathToFetchFrom}&pageNumber=1", headers=self.headers)
+        item_count = int(response.headers.get('item-count'))
+        start_page = 1
+        end_page = ceil(item_count / per_page)
+        session = Session()
+        session.headers.update(self.headers)
+        items_list = []
+        workers = min(10, end_page)
+        start_time = datetime.now()
+        with futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            [executor.submit(BagelDBWrapper._parallel_page_fetch, session, pathToFetchFrom, i, items_list)
+             for i in range(1, end_page + 1)]
+        print(f'Page {start_page}-{end_page} | Time take {datetime.now() - start_time}')
+        return items_list
+
+    @staticmethod
+    def _parallel_page_fetch(session, page_url, page, items_list):
+        start_time = datetime.now()
+        jobs_json = session.get(f"{page_url}&pageNumber={page}").json()
+        print(f'Page: {page} | Time taken {datetime.now() - start_time}')
+        items_list.extend(jobs_json)
+        return jobs_json
 
     def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
                        project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
