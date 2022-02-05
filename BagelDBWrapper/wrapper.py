@@ -56,19 +56,19 @@ class BagelDBWrapper:
         session = Session()
         session.headers.update(self.headers)
         items_list = []
-        workers = min(10, end_page)
-        start_time = datetime.now()
+        workers = max(min(10, end_page), 1)  # in case item_count < per_page
+        # start_time = datetime.now()
         with futures.ThreadPoolExecutor(max_workers=workers) as executor:
             [executor.submit(BagelDBWrapper._parallel_page_fetch, session, pathToFetchFrom, i, items_list)
-             for i in range(1, end_page + 1)]
-        # print(f'Page {start_page}-{end_page} | Time take {datetime.now() - start_time}')
+             for i in range(start_page, end_page + 1)]
+        # logging.info(f'Page {start_page}-{end_page} | Time take {datetime.now() - start_time}')
         return items_list
 
     @staticmethod
     def _parallel_page_fetch(session, page_url, page, items_list):
-        start_time = datetime.now()
+        # start_time = datetime.now()
         jobs_json = session.get(f"{page_url}&pageNumber={page}").json()
-        # print(f'Page: {page} | Time taken {datetime.now() - start_time}')
+        # logging.info(f'Page: {page} | Time taken {datetime.now() - start_time}')
         items_list.extend(jobs_json)
         return jobs_json
 
