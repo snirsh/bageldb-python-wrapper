@@ -1,4 +1,4 @@
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 import json
@@ -7,7 +7,6 @@ from math import ceil
 from requests import Session
 from tqdm import tqdm
 from urllib.parse import quote_plus
-from concurrent import futures
 
 # type structures
 MASTER_URL = 'https://api.bagelstudio.co/api/public'
@@ -57,18 +56,17 @@ class BagelDBWrapper:
         session.headers.update(self.headers)
         items_list = []
         workers = max(min(10, end_page), 1)  # in case item_count < per_page
-        # start_time = datetime.now()
-        with futures.ThreadPoolExecutor(max_workers=workers) as executor:
-            [executor.submit(BagelDBWrapper._parallel_page_fetch, session, pathToFetchFrom, i, items_list)
-             for i in range(start_page, end_page + 1)]
-        # logging.info(f'Page {start_page}-{end_page} | Time take {datetime.now() - start_time}')
+        with tqdm(total=end_page + 1, desc=f"Getting collection {collection_name}") as pbar:
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                futures = [executor.submit(BagelDBWrapper._parallel_page_fetch, session, pathToFetchFrom, i, items_list)
+                           for i in range(start_page, end_page + 1)]
+                for _ in as_completed(futures):
+                    pbar.update(1)
         return items_list
 
     @staticmethod
     def _parallel_page_fetch(session, page_url, page, items_list):
-        # start_time = datetime.now()
         jobs_json = session.get(f"{page_url}&pageNumber={page}").json()
-        # logging.info(f'Page: {page} | Time taken {datetime.now() - start_time}')
         items_list.extend(jobs_json)
         return jobs_json
 
