@@ -263,4 +263,3 @@ class BagelDBWrapper:
             .replace('{collection_name}', collection_name) \
             .replace('/items', f'/items/{item_id}?nestedID={nested_collection_name}.{nested_item_id}')
         return requests.delete(path_for_item, headers=self.headers)
-
