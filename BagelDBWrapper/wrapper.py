@@ -41,13 +41,15 @@ class BagelDBWrapper:
             extra_arguments += f"{symbol}projectOn={','.join(project_on)}"
             symbol = "&"
         if queries:
+            extra_arguments += f"{symbol}query="
+            symbol = "&"
+            query_strings = []
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(str(query[2]))}"
+                    query_strings.append(f"{query[0]}:{query[1]}:{quote_plus(str(query[2]))}")
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
-                symbol = "&"
-
+                    query_strings.append(f"{query[0]}:{quote_plus(str(query[1]))}")
+            extra_arguments += quote_plus('+').join(query_strings)
         path_to_fetch_from += f"{extra_arguments}{symbol}perPage={per_page}"
         response = requests.get(f"{path_to_fetch_from}&pageNumber=1", headers=self.headers)
         item_count = int(response.headers.get('item-count'))
@@ -57,20 +59,19 @@ class BagelDBWrapper:
         session.headers.update(self.headers)
         items_list = []
         workers = max(min(max_workers, end_page), 1)
-        with tqdm(total=end_page + 1, desc=f"Getting collection {collection_name}",
-                  disable=not self.enable_tqdm) as pbar:
+        with tqdm(total=end_page + 1, desc=f"Getting collection {collection_name}") as pbar:
             with ThreadPoolExecutor(max_workers=workers) as executor:
-                futures = [executor.submit(BagelDBWrapper._parallel_page_fetch, session, path_to_fetch_from, i)
-                           for i in range(start_page, end_page + 1)]
-                for future in as_completed(futures):
-                    items = future.result()
-                    items_list.extend(items)
-                    pbar.update()
+                futures = [
+                    executor.submit(BagelDBWrapper._parallel_page_fetch, session, path_to_fetch_from, i, items_list)
+                    for i in range(start_page, end_page + 1)]
+                for _ in as_completed(futures):
+                    pbar.update(1)
         return items_list
 
     @staticmethod
-    def _parallel_page_fetch(session, page_url, page):
+    def _parallel_page_fetch(session, page_url, page, items_list):
         jobs_json = session.get(f"{page_url}&pageNumber={page}").json()
+        items_list.extend(jobs_json)
         return jobs_json
 
     def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
@@ -264,4 +265,3 @@ class BagelDBWrapper:
             .replace('{collection_name}', collection_name) \
             .replace('/items', f'/items/{item_id}?nestedID={nested_collection_name}.{nested_item_id}')
         return requests.delete(path_for_item, headers=self.headers)
-
