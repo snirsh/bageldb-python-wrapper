@@ -41,13 +41,15 @@ class BagelDBWrapper:
             extra_arguments += f"{symbol}projectOn={','.join(project_on)}"
             symbol = "&"
         if queries:
+            extra_arguments += f"{symbol}query="
+            symbol = "&"
+            query_strings = []
             for query in queries:
                 if len(query) == 3:
-                    extra_arguments += f"{symbol}query={query[0]}:{query[1]}:{quote_plus(str(query[2]))}"
+                    query_strings.append(f"{query[0]}:{query[1]}:{quote_plus(str(query[2]))}")
                 else:
-                    extra_arguments += f"{symbol}query={query[0]}:{quote_plus(str(query[1]))}"
-                symbol = "&"
-
+                    query_strings.append(f"{query[0]}:{quote_plus(str(query[1]))}")
+            extra_arguments += quote_plus('+').join(query_strings)
         path_to_fetch_from += f"{extra_arguments}{symbol}perPage={per_page}"
         response = requests.get(f"{path_to_fetch_from}&pageNumber=1", headers=self.headers)
         item_count = int(response.headers.get('item-count'))
