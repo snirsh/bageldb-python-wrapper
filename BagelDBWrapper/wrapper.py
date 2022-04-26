@@ -59,7 +59,7 @@ class BagelDBWrapper:
         session.headers.update(self.headers)
         items_list = []
         workers = max(min(max_workers, end_page), 1)
-        with tqdm(total=end_page + 1, desc=f"Getting collection {collection_name}") as pbar:
+        with tqdm(total=end_page + 1, desc=f"Getting collection {collection_name}", disable=not self.enable_tqdm) as pbar:
             with ThreadPoolExecutor(max_workers=workers) as executor:
                 futures = [
                     executor.submit(BagelDBWrapper._parallel_page_fetch, session, path_to_fetch_from, i, items_list)
