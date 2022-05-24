@@ -1,11 +1,12 @@
+import asyncio
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 import json
 from math import ceil
 
-from requests import Session
+from aiohttp import ClientSession, ClientError
+from tqdm import asyncio as tqdm_aio
 from tqdm import tqdm
 from urllib.parse import quote_plus
 
@@ -28,7 +29,7 @@ class BagelDBWrapper:
         self.headers['Authorization'] = self.headers['Authorization'].replace('{}', api_token)
 
     def get_collection_parallel(self, collection_name: str, per_page: int = 100, project_on: [str] = None,
-                                queries: [tuple] = None, extra_params: [str] = None, max_workers: int = 10):
+                                queries: [tuple] = None, extra_params: [str] = None):
         if extra_params is None:
             extra_params = []
         path_to_fetch_from = self.path.replace('{collection_name}', collection_name)
@@ -53,26 +54,38 @@ class BagelDBWrapper:
         path_to_fetch_from += f"{extra_arguments}{symbol}perPage={per_page}"
         response = requests.get(f"{path_to_fetch_from}&pageNumber=1", headers=self.headers)
         item_count = int(response.headers.get('item-count'))
-        start_page = 1
         end_page = ceil(item_count / per_page)
-        session = Session()
-        session.headers.update(self.headers)
-        items_list = []
-        workers = max(min(max_workers, end_page), 1)
-        with tqdm(total=end_page + 1, desc=f"Getting collection {collection_name}", disable=not self.enable_tqdm) as pbar:
-            with ThreadPoolExecutor(max_workers=workers) as executor:
-                futures = [
-                    executor.submit(BagelDBWrapper._parallel_page_fetch, session, path_to_fetch_from, i, items_list)
-                    for i in range(start_page, end_page + 1)]
-                for _ in as_completed(futures):
-                    pbar.update(1)
-        return items_list
+        items = asyncio.run(
+            self.parallel_fetching(set([f"{path_to_fetch_from}& pageNumber={i}" for i in range(1, end_page)])))
+        return [j for jobs in items for j in jobs]
 
     @staticmethod
-    def _parallel_page_fetch(session, page_url, page, items_list):
-        jobs_json = session.get(f"{page_url}&pageNumber={page}").json()
-        items_list.extend(jobs_json)
-        return jobs_json
+    async def _fetch_json(url: str, session: ClientSession) -> tuple:
+        data = None
+        retries = 10
+        while data is None or retries == 0:
+            try:
+                async with session.get(url) as response:
+                    retries -= 1
+                    data = await response.json()
+            except ClientError:
+                await asyncio.sleep(1)
+            except asyncio.exceptions.TimeoutError:
+                await asyncio.sleep(1)
+        return url, data
+
+    async def parallel_fetching(self, urls: set) -> []:
+        async with ClientSession(headers=self.headers) as session:
+            tasks = []
+            for url in urls:
+                tasks.append(
+                    BagelDBWrapper._fetch_json(url=url, session=session)
+                )
+            results = await tqdm_aio.tqdm.gather(*tasks)
+        jsons = []
+        for result in results:
+            jsons.append(result[1])
+        return jsons
 
     def get_collection(self, collection_name: str, pagination: bool = True, per_page: int = 100,
                        project_on: [str] = None, queries: [tuple] = None, extra_params: [str] = None):
