@@ -1,5 +1,5 @@
 import asyncio
-import os
+from typing import Mapping
 
 import aiohttp
 import requests
@@ -161,7 +161,7 @@ class BagelDBWrapper:
         path_to_write_to = self.path.replace('{collection_name}', collection_name)
         return requests.post(path_to_write_to, json.dumps(object_dict), headers=self.headers)
 
-    def update_item(self, collection_name: str, item_id: str, dict_to_write: dict):
+    def update_item(self, collection_name: str, item_id: str, dict_to_write: Mapping[str, any]):
         """
         updates an item inside collection_name with dict_to_write given item_id
 
