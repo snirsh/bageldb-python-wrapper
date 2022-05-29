@@ -56,7 +56,7 @@ class BagelDBWrapper:
         item_count = int(response.headers.get('item-count'))
         end_page = ceil(item_count / per_page)
         items = asyncio.run(
-            self.parallel_fetching(set([f"{path_to_fetch_from}& pageNumber={i}" for i in range(1, end_page)])))
+            self.parallel_fetching(set([f"{path_to_fetch_from}&pageNumber={i}" for i in range(1, end_page)])))
         return [j for jobs in items for j in jobs]
 
     @staticmethod
@@ -81,7 +81,10 @@ class BagelDBWrapper:
                 tasks.append(
                     BagelDBWrapper._fetch_json(url=url, session=session)
                 )
-            results = await tqdm_aio.tqdm.gather(*tasks)
+            if self.enable_tqdm:
+                results = await tqdm_aio.tqdm.gather(*tasks)
+            else:
+                results = await asyncio.gather(*tasks)
         jsons = []
         for result in results:
             jsons.append(result[1])
