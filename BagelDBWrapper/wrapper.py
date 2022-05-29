@@ -81,7 +81,10 @@ class BagelDBWrapper:
                 tasks.append(
                     BagelDBWrapper._fetch_json(url=url, session=session)
                 )
-            results = await tqdm_aio.tqdm.gather(*tasks)
+            if self.enable_tqdm:
+                results = await tqdm_aio.tqdm.gather(*tasks)
+            else:
+                results = await asyncio.gather(*tasks)
         jsons = []
         for result in results:
             jsons.append(result[1])
