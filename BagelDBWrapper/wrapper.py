@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+import aiohttp
 import requests
 import json
 from math import ceil
@@ -75,7 +76,8 @@ class BagelDBWrapper:
         return url, data
 
     async def parallel_fetching(self, urls: set) -> []:
-        async with ClientSession(headers=self.headers) as session:
+        connector = aiohttp.TCPConnector(limit=10, limit_per_host=10)
+        async with ClientSession(connector=connector, headers=self.headers) as session:
             tasks = []
             for url in urls:
                 tasks.append(
