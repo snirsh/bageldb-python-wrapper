@@ -56,7 +56,7 @@ class BagelDBWrapper:
         item_count = int(response.headers.get('item-count'))
         end_page = ceil(item_count / per_page)
         items = asyncio.run(
-            self.parallel_fetching(set([f"{path_to_fetch_from}&pageNumber={i}" for i in range(1, end_page)])))
+            self.parallel_fetching(set([f"{path_to_fetch_from}&pageNumber={i}" for i in range(1, end_page + 1)])))
         return [j for jobs in items for j in jobs]
 
     @staticmethod
